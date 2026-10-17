@@ -1,0 +1,2141 @@
+# =============================================================================
+# research-feed-bot source catalogue
+# =============================================================================
+#
+# Every [[source]] gets its own Discord channel (one webhook each). Only titles
+# and links are ever posted.
+#
+# How a source is read (kind = "auto", the default, tries these in order):
+#   1. each URL in `feed` (RSS or Atom)
+#   2. feeds advertised by the `site` page (<link rel="alternate">)
+#   3. article links scraped from the `site` listing page
+# So a wrong or moved feed URL degrades gracefully instead of breaking.
+#
+# Keys (all optional except id, name, category, and one of feed/site):
+#   id               lowercase-with-dashes; also the key in the DISCORD_WEBHOOKS secret
+#   name             shown in docs and digests
+#   username         name the webhook posts as (defaults to name)
+#   category         one of [categories] below
+#   feed             URL or list of URLs tried in order
+#   site             homepage or blog listing page (discovery + scraping fallback)
+#   kind             "auto" | "feed" | "html"
+#   link_pattern     regex for article URLs when scraping (rarely needed)
+#   include_keywords only post titles containing one of these (case-insensitive)
+#   exclude_keywords never post titles containing one of these
+#   max_per_run      cap per run (default from [defaults])
+#   max_age_days     dated items older than this are never posted
+#   mode             "each" | "digest" | "auto"
+#   enabled          false keeps the entry documented but inactive
+#   high_volume      documentation flag for very busy feeds
+#   author, note     documentation only
+#
+# After editing: `python -m feedbot lint` (CI runs it on every push and PR).
+# =============================================================================
+
+[defaults]
+max_per_run = 5
+max_age_days = 14
+mode = "auto"
+digest_over = 3
+bootstrap_posts = 0
+flood_threshold = 15
+alert_after_failures = 3
+stale_after_days = 365
+
+# Discord presentation. All keys optional.
+[discord]
+brand = "Within Quantum"
+# "link": bold title plus the bare link, with Discord's own preview underneath. When Discord
+#         makes no preview, the bot adds a box shaped like one, so every post has a preview.
+# "card": a branded card with a colour per section instead.
+style = "link"
+avatars = "auto"              # each source's own website icon as the profile picture; "off" for Discord's default
+preview_image = "large"       # image size in the fallback preview box: "large", "thumbnail" or "none"
+dedupe_hours = 72             # the same story is not posted twice within this many hours
+briefing_max_per_category = 15
+# asset_base_url = "https://raw.githubusercontent.com/<you>/<repo>/main/"  # for avatar = "assets/..." paths
+
+# Card colour per section.
+[discord.colors]
+quantum-researchers = "#4F7CAC"
+math = "#7A6FB0"
+tcs = "#5E8C7A"
+ai = "#C27C4E"
+big-tech = "#3F6E8C"
+hardware = "#2E8B8B"
+qec = "#8A5A9E"
+software = "#4C9A6A"
+control = "#9A7B4F"
+networking = "#3D7EA6"
+publications = "#A0525B"
+government = "#5B6C8F"
+institutes = "#6B8E4E"
+analysts = "#B08A3E"
+
+# Optional opt-in pings: a Discord role id per section (Server Settings > Roles >
+# right-click > Copy Role ID). A section pings its role at most once per run.
+[discord.roles]
+# hardware = "123456789012345678"
+
+[categories]
+quantum-researchers = "Quantum researchers"
+math = "Mathematics and math + AI"
+tcs = "Theoretical computer science"
+ai = "AI researchers"
+big-tech = "Big tech quantum programs"
+hardware = "Quantum hardware companies"
+qec = "Quantum error correction"
+software = "Quantum software and algorithms"
+control = "Control systems and enabling hardware"
+networking = "Quantum networking and post-quantum cryptography"
+publications = "Professional bodies and publications"
+government = "National labs and government programs"
+institutes = "University institutes"
+analysts = "Independent analysts and industry news"
+
+# =============================================================================
+# QUANTUM RESEARCHERS
+# =============================================================================
+
+[[source]]
+id = "shtetl-optimized"
+name = "Shtetl-Optimized"
+author = "Scott Aaronson (UT Austin)"
+category = "quantum-researchers"
+feed = "https://scottaaronson.blog/?feed=rss2"
+site = "https://scottaaronson.blog/"
+note = "Quantum complexity, hype-busting, AI."
+
+[[source]]
+id = "quantum-frontiers"
+name = "Quantum Frontiers"
+author = "Caltech IQIM group blog (Preskill and others)"
+category = "quantum-researchers"
+feed = "https://quantumfrontiers.com/feed/"
+site = "https://quantumfrontiers.com/"
+
+[[source]]
+id = "osborne-research-notes"
+name = "Tobias J. Osborne's research notes"
+author = "Tobias Osborne (Leibniz Universität Hannover)"
+category = "quantum-researchers"
+feed = "https://tjoresearchnotes.wordpress.com/feed/"
+site = "https://tjoresearchnotes.wordpress.com/"
+note = "Rare posts."
+
+[[source]]
+id = "gil-kalai"
+name = "Combinatorics and More"
+author = "Gil Kalai (Hebrew University)"
+category = "quantum-researchers"
+feed = "https://gilkalai.wordpress.com/feed/"
+site = "https://gilkalai.wordpress.com/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "algorithmic-assertions"
+name = "Algorithmic Assertions"
+author = "Craig Gidney (Google Quantum AI)"
+category = "quantum-researchers"
+feed = ["https://algassert.com/feed.xml", "https://algassert.com/atom.xml"]
+site = "https://algassert.com/"
+note = "Error correction, resource estimates, factoring claims."
+
+[[source]]
+id = "nanoscale-views"
+name = "Nanoscale Views"
+author = "Douglas Natelson (Rice University)"
+category = "quantum-researchers"
+feed = "https://nanoscale.blogspot.com/feeds/posts/default"
+site = "https://nanoscale.blogspot.com/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "not-even-wrong"
+name = "Not Even Wrong"
+author = "Peter Woit (Columbia)"
+category = "quantum-researchers"
+feed = "https://www.math.columbia.edu/~woit/wordpress/?feed=rss2"
+site = "https://www.math.columbia.edu/~woit/wordpress/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "azimuth"
+name = "Azimuth"
+author = "John Baez (Edinburgh)"
+category = "quantum-researchers"
+feed = "https://johncarlosbaez.wordpress.com/feed/"
+site = "https://johncarlosbaez.wordpress.com/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "four-gravitons"
+name = "4 gravitons"
+author = "Matt von Hippel"
+category = "quantum-researchers"
+feed = "https://4gravitons.com/feed/"
+site = "https://4gravitons.com/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "more-quantum"
+name = "More Quantum"
+author = "Mateus Araújo (University of Valladolid; editor of the journal Quantum)"
+category = "quantum-researchers"
+feed = "https://mateusaraujo.info/feed/"
+site = "https://mateusaraujo.info/"
+note = "Quantum foundations, nonlocality, the state of quantum research. About monthly."
+
+[[source]]
+id = "forexiv"
+name = "foreXiv"
+author = "Jess Riedel"
+category = "quantum-researchers"
+feed = "https://blog.jessriedel.com/feed/"
+site = "https://blog.jessriedel.com/"
+note = "Quantum foundations and decoherence. A few posts a year."
+
+# =============================================================================
+# MATHEMATICS AND MATH + AI
+# =============================================================================
+
+[[source]]
+id = "terry-tao"
+name = "What's new"
+username = "Terence Tao"
+author = "Terence Tao (UCLA)"
+category = "math"
+feed = "https://terrytao.wordpress.com/feed/"
+site = "https://terrytao.wordpress.com/"
+high_volume = true
+note = "Near-daily during AI-for-math news cycles."
+max_per_run = 2
+
+[[source]]
+id = "gowers"
+name = "Gowers's Weblog"
+author = "Timothy Gowers (Collège de France, Cambridge)"
+category = "math"
+feed = "https://gowers.wordpress.com/feed/"
+site = "https://gowers.wordpress.com/"
+
+[[source]]
+id = "xena-project"
+name = "Xena"
+author = "Kevin Buzzard (Imperial College London)"
+category = "math"
+feed = "https://xenaproject.wordpress.com/feed/"
+site = "https://xenaproject.wordpress.com/"
+note = "Lean, mathlib, formalization, AI."
+
+[[source]]
+id = "persiflage"
+name = "Persiflage"
+author = "Frank Calegari (University of Chicago)"
+category = "math"
+feed = "https://galoisrepresentations.org/feed/"
+site = "https://galoisrepresentations.org/"
+
+[[source]]
+id = "n-category-cafe"
+name = "The n-Category Café"
+author = "Group blog (Baez, Riehl, Shulman, Leinster and others)"
+category = "math"
+feed = ["https://golem.ph.utexas.edu/category/atom10.xml", "https://golem.ph.utexas.edu/category/index.rdf"]
+site = "https://golem.ph.utexas.edu/category/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "quomodocumque"
+name = "Quomodocumque"
+author = "Jordan Ellenberg (UW-Madison)"
+category = "math"
+feed = "https://quomodocumque.wordpress.com/feed/"
+site = "https://quomodocumque.wordpress.com/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "peter-cameron"
+name = "Peter Cameron's Blog"
+author = "Peter Cameron (QMUL / St Andrews)"
+category = "math"
+feed = "https://cameroncounts.wordpress.com/feed/"
+site = "https://cameroncounts.wordpress.com/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "infinitely-more"
+name = "Infinitely More"
+author = "Joel David Hamkins (Notre Dame)"
+category = "math"
+feed = "https://www.infinitelymore.xyz/feed"
+site = "https://www.infinitelymore.xyz/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "igor-pak"
+name = "Igor Pak's blog"
+author = "Igor Pak (UCLA)"
+category = "math"
+feed = "https://igorpak.wordpress.com/feed/"
+site = "https://igorpak.wordpress.com/"
+note = "Rare posts."
+
+# =============================================================================
+# THEORETICAL COMPUTER SCIENCE
+# =============================================================================
+
+[[source]]
+id = "computational-complexity"
+name = "Computational Complexity"
+author = "Lance Fortnow and Bill Gasarch"
+category = "tcs"
+feed = "https://blog.computationalcomplexity.org/feeds/posts/default"
+site = "https://blog.computationalcomplexity.org/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "windows-on-theory"
+name = "Windows on Theory"
+author = "Boaz Barak (Harvard, OpenAI)"
+category = "tcs"
+feed = "https://windowsontheory.org/feed/"
+site = "https://windowsontheory.org/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "godels-lost-letter"
+name = "Gödel's Lost Letter and P=NP"
+author = "Richard Lipton and Ken Regan"
+category = "tcs"
+feed = ["https://rjlipton.com/feed/", "https://rjlipton.wpcomstaging.com/feed/"]
+site = "https://rjlipton.com/"
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+enabled = false
+
+[[source]]
+id = "arg-min"
+name = "arg min"
+author = "Ben Recht (UC Berkeley)"
+category = "tcs"
+feed = ["https://www.argmin.net/feed", "http://www.argmin.net/feed.xml"]
+site = "https://www.argmin.net/"
+high_volume = true
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+enabled = false
+
+[[source]]
+id = "eppstein"
+name = "0xDE"
+author = "David Eppstein (UC Irvine)"
+category = "tcs"
+feed = "https://11011110.github.io/blog/feed.xml"
+site = "https://11011110.github.io/blog/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "ernies-3d-pancakes"
+name = "Ernie's 3D Pancakes"
+author = "Jeff Erickson (UIUC)"
+category = "tcs"
+feed = "https://jeffgerickson.substack.com/feed"
+site = "https://jeffgerickson.substack.com/"
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+enabled = false
+
+[[source]]
+id = "emanuele-viola"
+name = "Thoughts (Emanuele Viola)"
+author = "Emanuele Viola (Northeastern)"
+category = "tcs"
+feed = "https://emanueleviola.wordpress.com/feed/"
+site = "https://emanueleviola.wordpress.com/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "kamathematics"
+name = "Kamathematics"
+author = "Gautam Kamath (Waterloo)"
+category = "tcs"
+feed = "https://kamathematics.wordpress.com/feed/"
+site = "https://kamathematics.wordpress.com/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "francis-bach"
+name = "Machine Learning Research Blog"
+username = "Francis Bach"
+author = "Francis Bach (INRIA)"
+category = "tcs"
+feed = "https://francisbach.com/feed/"
+site = "https://francisbach.com/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "aaron-roth"
+name = "Adventures in Computation"
+author = "Aaron Roth (UPenn)"
+category = "tcs"
+feed = "https://aaronsadventures.blogspot.com/feeds/posts/default"
+site = "https://aaronsadventures.blogspot.com/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "my-biased-coin"
+name = "My Biased Coin"
+author = "Michael Mitzenmacher (Harvard)"
+category = "tcs"
+feed = "https://mybiasedcoin.blogspot.com/feeds/posts/default"
+site = "https://mybiasedcoin.blogspot.com/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "sophie-huiberts"
+name = "Sophie Huiberts"
+author = "Sophie Huiberts (CNRS)"
+category = "tcs"
+feed = "https://sophie.huiberts.me/feed.xml"
+site = "https://sophie.huiberts.me/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "decentralized-thoughts"
+name = "Decentralized Thoughts"
+author = "Ittai Abraham and others"
+category = "tcs"
+feed = "https://decentralizedthoughts.github.io/feed"
+site = "https://decentralizedthoughts.github.io/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "off-the-convex-path"
+name = "Off the Convex Path"
+author = "Sanjeev Arora and others"
+category = "tcs"
+feed = "http://www.offconvex.org/feed.xml"
+site = "http://www.offconvex.org/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "gradient-science"
+name = "Gradient Science"
+author = "Aleksander Mądry's group (MIT)"
+category = "tcs"
+feed = "https://gradientscience.org/feed.xml"
+site = "https://gradientscience.org/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "simons-institute"
+name = "Simons Institute News"
+category = "tcs"
+site = "https://simons.berkeley.edu/news"
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+enabled = false
+
+[[source]]
+id = "theory-dish"
+name = "Theory Dish"
+author = "Stanford theory group"
+category = "tcs"
+feed = "https://theorydish.blog/feed/"
+site = "https://theorydish.blog/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "differential-privacy"
+name = "DifferentialPrivacy.org"
+category = "tcs"
+feed = "https://differentialprivacy.org/feed.xml"
+site = "https://differentialprivacy.org/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+# =============================================================================
+# AI RESEARCHERS
+# =============================================================================
+
+[[source]]
+id = "lilian-weng"
+name = "Lil'Log"
+author = "Lilian Weng"
+category = "ai"
+feed = "https://lilianweng.github.io/index.xml"
+site = "https://lilianweng.github.io/"
+note = "Rare, long surveys."
+
+[[source]]
+id = "karpathy"
+name = "Andrej Karpathy"
+category = "ai"
+feed = ["https://karpathy.bearblog.dev/feed/", "https://karpathy.bearblog.dev/feed/?type=rss"]
+site = "https://karpathy.bearblog.dev/"
+note = "Irregular. The old karpathy.github.io blog is dormant."
+
+[[source]]
+id = "ahead-of-ai"
+name = "Ahead of AI"
+author = "Sebastian Raschka"
+category = "ai"
+feed = "https://magazine.sebastianraschka.com/feed"
+site = "https://magazine.sebastianraschka.com/"
+
+[[source]]
+id = "interconnects"
+name = "Interconnects"
+author = "Nathan Lambert"
+category = "ai"
+feed = "https://www.interconnects.ai/feed"
+site = "https://www.interconnects.ai/"
+high_volume = true
+
+[[source]]
+id = "bounded-regret"
+name = "Bounded Regret"
+author = "Jacob Steinhardt (UC Berkeley, Transluce)"
+category = "ai"
+feed = "https://bounded-regret.ghost.io/rss/"
+site = "https://bounded-regret.ghost.io/"
+
+[[source]]
+id = "ai-guide-thinking-humans"
+name = "AI: A Guide for Thinking Humans"
+author = "Melanie Mitchell (Santa Fe Institute)"
+category = "ai"
+feed = "https://aiguide.substack.com/feed"
+site = "https://aiguide.substack.com/"
+note = "Disabled after Check sources (Oct 8, 2026): Substack blocks GitHub runners (HTTP 403)."
+enabled = false
+
+[[source]]
+id = "gelman-stat-modeling"
+name = "Statistical Modeling, Causal Inference, and Social Science"
+username = "Andrew Gelman et al."
+author = "Andrew Gelman and co-bloggers (Columbia)"
+category = "ai"
+feed = "https://statmodeling.stat.columbia.edu/feed/"
+site = "https://statmodeling.stat.columbia.edu/"
+high_volume = true
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "marcus-on-ai"
+name = "Marcus on AI"
+author = "Gary Marcus"
+category = "ai"
+feed = "https://garymarcus.substack.com/feed"
+site = "https://garymarcus.substack.com/"
+high_volume = true
+note = "Disabled after Check sources (Oct 8, 2026): Substack blocks GitHub runners (HTTP 403)."
+enabled = false
+
+[[source]]
+id = "simon-willison"
+name = "Simon Willison's Weblog"
+category = "ai"
+feed = "https://simonwillison.net/atom/entries/"
+site = "https://simonwillison.net/"
+high_volume = true
+note = "Long-form entries only (the link blog is excluded)."
+
+# =============================================================================
+# BIG TECH QUANTUM PROGRAMS
+# =============================================================================
+
+[[source]]
+id = "google-quantum-ai"
+name = "Google Quantum AI"
+category = "big-tech"
+site = "https://blog.google/innovation-and-ai/models-and-research/quantum-computing/"
+include_keywords = ["quantum", "qubit", "willow", "error correction"]
+note = "Switched off in the October 2026 review: big-tech channel removed; headlines arrive via the analysts channel."
+enabled = false
+
+[[source]]
+id = "google-research-quantum"
+name = "Google Research (quantum posts)"
+category = "big-tech"
+feed = "https://research.google/blog/rss/"
+site = "https://research.google/blog/"
+include_keywords = ["quantum", "qubit", "error correction"]
+enabled = false
+note = "Switched off in the October 2026 review: big-tech channel removed; headlines arrive via the analysts channel."
+
+[[source]]
+id = "ibm-quantum"
+name = "IBM Quantum Blog"
+category = "big-tech"
+site = "https://www.ibm.com/quantum/blog"
+link_pattern = "^https://www\\.ibm\\.com/quantum/blog/[a-z0-9-]+/?$"
+note = "Switched off in the October 2026 review: big-tech channel removed; headlines arrive via the analysts channel."
+enabled = false
+
+[[source]]
+id = "aws-quantum"
+name = "AWS Quantum Technologies Blog"
+category = "big-tech"
+feed = "https://aws.amazon.com/blogs/quantum-computing/feed/"
+site = "https://aws.amazon.com/blogs/quantum-computing/"
+enabled = false
+note = "Switched off in the October 2026 review: big-tech channel removed; headlines arrive via the analysts channel."
+
+[[source]]
+id = "azure-quantum"
+name = "Microsoft Azure Quantum Blog"
+category = "big-tech"
+feed = "https://azure.microsoft.com/en-us/blog/quantum/feed/"
+site = "https://azure.microsoft.com/en-us/blog/quantum/"
+enabled = false
+note = "Switched off in the October 2026 review: big-tech channel removed; headlines arrive via the analysts channel."
+
+[[source]]
+id = "nvidia-quantum"
+name = "NVIDIA Technical Blog (quantum)"
+category = "big-tech"
+feed = "https://developer.nvidia.com/blog/feed/"
+site = "https://developer.nvidia.com/blog/"
+include_keywords = ["quantum", "qubit", "cuda-q", "cudaq", "nvqlink"]
+enabled = false
+note = "Switched off in the October 2026 review: big-tech channel removed; headlines arrive via the analysts channel."
+
+# =============================================================================
+# QUANTUM HARDWARE COMPANIES
+# =============================================================================
+
+# --- Trapped ions ---
+
+[[source]]
+id = "quantinuum"
+name = "Quantinuum Blog"
+category = "hardware"
+site = "https://www.quantinuum.com/news/blog"
+note = "Technical blog and news; mostly scraped."
+
+[[source]]
+id = "ionq"
+name = "IonQ Blog"
+category = "hardware"
+site = "https://www.ionq.com/blog"
+note = "Mostly announcements. Owns Oxford Ionics, ID Quantique, Lightsynq, SkyWater."
+
+[[source]]
+id = "aqt"
+name = "Alpine Quantum Technologies (AQT)"
+category = "hardware"
+feed = "https://www.aqt.eu/feed/"
+site = "https://www.aqt.eu/news/"
+
+[[source]]
+id = "quantum-art"
+name = "Quantum Art"
+category = "hardware"
+site = "https://www.quantum-art.tech/news"
+
+# --- Neutral atoms ---
+
+[[source]]
+id = "quera"
+name = "QuEra Computing"
+category = "hardware"
+feed = "https://www.quera.com/blog/rss.xml"
+site = "https://www.quera.com/blog"
+
+[[source]]
+id = "pasqal"
+name = "Pasqal"
+category = "hardware"
+site = "https://www.pasqal.com/blog/"
+
+[[source]]
+id = "atom-computing"
+name = "Atom Computing"
+category = "hardware"
+feed = "https://atom-computing.com/feed/"
+site = "https://atom-computing.com/news/"
+
+[[source]]
+id = "infleqtion"
+name = "Infleqtion"
+category = "hardware"
+site = "https://infleqtion.com/blog"
+
+[[source]]
+id = "planqc"
+name = "planqc"
+category = "hardware"
+site = "https://www.planqc.eu/"
+
+# --- Superconducting ---
+
+[[source]]
+id = "rigetti"
+name = "Rigetti Computing (press releases)"
+category = "hardware"
+site = "https://investors.rigetti.com/news-releases"
+link_pattern = "news-release-details/"
+note = "Disabled after Check sources (Oct 8, 2026): Investor site times out from GitHub."
+enabled = false
+
+[[source]]
+id = "iqm"
+name = "IQM Quantum Computers"
+category = "hardware"
+site = "https://meetiqm.com/blog/"
+
+[[source]]
+id = "alice-and-bob"
+name = "Alice & Bob"
+category = "hardware"
+feed = "https://alice-bob.com/feed/"
+site = "https://alice-bob.com/blog/"
+note = "Disabled after Check sources (Oct 8, 2026): Site blocks GitHub runners (HTTP 403)."
+enabled = false
+
+[[source]]
+id = "oqc"
+name = "Oxford Quantum Circuits"
+category = "hardware"
+site = "https://oqc.tech/news/"
+
+[[source]]
+id = "nord-quantique"
+name = "Nord Quantique"
+category = "hardware"
+site = "https://nordquantique.ca/en/news"
+
+[[source]]
+id = "d-wave"
+name = "D-Wave"
+category = "hardware"
+site = "https://www.dwavequantum.com/company/newsroom/"
+link_pattern = "/company/newsroom/(press-release|article)/"
+note = "Mostly press releases. Now includes Quantum Circuits (acquired Jan 2026)."
+
+# --- Photonics ---
+
+[[source]]
+id = "pennylane-blog"
+name = "PennyLane Blog (Xanadu)"
+category = "hardware"
+site = "https://pennylane.ai/blog"
+note = "Xanadu's technical/software blog; investor news deliberately excluded."
+
+[[source]]
+id = "psiquantum"
+name = "PsiQuantum"
+category = "hardware"
+site = "https://www.psiquantum.com/"
+
+[[source]]
+id = "quandela"
+name = "Quandela"
+category = "hardware"
+feed = "https://www.quandela.com/feed/"
+site = "https://www.quandela.com/news/"
+
+[[source]]
+id = "orca-computing"
+name = "ORCA Computing"
+category = "hardware"
+feed = "https://orcacomputing.com/feed/"
+site = "https://orcacomputing.com/news/"
+
+[[source]]
+id = "quix-quantum"
+name = "QuiX Quantum"
+category = "hardware"
+site = "https://www.quixquantum.com/news"
+
+[[source]]
+id = "photonic-inc"
+name = "Photonic Inc."
+category = "hardware"
+feed = "https://photonic.com/feed/"
+site = "https://photonic.com/news/"
+
+# --- Silicon spin ---
+
+[[source]]
+id = "diraq"
+name = "Diraq"
+category = "hardware"
+site = "https://diraq.com/"
+
+[[source]]
+id = "quantum-motion"
+name = "Quantum Motion"
+category = "hardware"
+site = "https://quantummotion.tech/news"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): Site blocks GitHub runners (HTTP 403)."
+
+[[source]]
+id = "silicon-quantum-computing"
+name = "Silicon Quantum Computing"
+category = "hardware"
+site = "https://sqc.com.au/news/"
+
+[[source]]
+id = "equal1"
+name = "Equal1"
+category = "hardware"
+site = "https://www.equal1.com/news"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): No readable news page."
+
+# =============================================================================
+# QUANTUM ERROR CORRECTION
+# =============================================================================
+
+[[source]]
+id = "riverlane"
+name = "Riverlane"
+category = "qec"
+site = "https://www.riverlane.com/news"
+note = "Best QEC company blog. No feed; listing page is scraped."
+
+[[source]]
+id = "q-ctrl"
+name = "Q-CTRL"
+category = "qec"
+site = "https://q-ctrl.com/blog"
+
+# =============================================================================
+# QUANTUM SOFTWARE AND ALGORITHMS
+# =============================================================================
+
+[[source]]
+id = "classiq"
+name = "Classiq"
+category = "software"
+site = "https://www.classiq.io/"
+link_pattern = "classiq\\.io/(insights|blog|news)/[a-z0-9-]+/?$"
+
+[[source]]
+id = "phasecraft"
+name = "Phasecraft"
+category = "software"
+site = "https://phasecraft.io/news/"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): No readable news page."
+
+[[source]]
+id = "algorithmiq"
+name = "Algorithmiq"
+category = "software"
+site = "https://algorithmiq.fi/news/"
+
+[[source]]
+id = "kipu-quantum"
+name = "Kipu Quantum"
+category = "software"
+site = "https://kipu-quantum.com/news/"
+
+[[source]]
+id = "haiqu"
+name = "Haiqu"
+category = "software"
+site = "https://www.haiqu.ai/blog"
+
+[[source]]
+id = "qc-ware"
+name = "QC Ware"
+category = "software"
+site = "https://www.qcware.com/news"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): No readable news page."
+
+[[source]]
+id = "horizon-quantum"
+name = "Horizon Quantum"
+category = "software"
+site = "https://www.horizonquantum.com/news"
+
+[[source]]
+id = "bluequbit"
+name = "BlueQubit"
+category = "software"
+site = "https://www.bluequbit.io/blog"
+
+[[source]]
+id = "multiverse-computing"
+name = "Multiverse Computing"
+category = "software"
+site = "https://multiversecomputing.com/resources"
+note = "Leans marketing."
+
+[[source]]
+id = "sandboxaq"
+name = "SandboxAQ"
+category = "software"
+site = "https://www.sandboxaq.com/blog"
+include_keywords = ["quantum", "qubit", "post-quantum", "pqc", "cryptograph"]
+note = "Filtered to quantum topics."
+
+[[source]]
+id = "unitary-foundation"
+name = "Unitary Foundation"
+category = "software"
+site = "https://unitary.foundation/"
+link_pattern = "unitary\\.foundation/posts/[^/]+/?$"
+note = "Open-source quantum software nonprofit (formerly Unitary Fund). Posts live at /posts/<slug>/."
+
+[[source]]
+id = "qiskit-medium"
+name = "Qiskit (Medium)"
+category = "software"
+feed = "https://medium.com/feed/qiskit"
+site = "https://medium.com/qiskit"
+enabled = false
+note = "Probably dormant; IBM now posts Qiskit news on the IBM Quantum blog. Enable if it revives."
+
+# =============================================================================
+# CONTROL SYSTEMS AND ENABLING HARDWARE
+# =============================================================================
+
+[[source]]
+id = "quantum-machines"
+name = "Quantum Machines"
+category = "control"
+feed = "https://www.quantum-machines.co/feed/"
+site = "https://www.quantum-machines.co/blog/"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): Site blocks GitHub runners (HTTP 403)."
+
+[[source]]
+id = "qblox"
+name = "Qblox"
+category = "control"
+site = "https://www.qblox.com/"
+
+[[source]]
+id = "zurich-instruments"
+name = "Zurich Instruments (quantum)"
+category = "control"
+site = "https://www.zhinst.com/en/blogs"
+include_keywords = ["quantum", "qubit"]
+
+[[source]]
+id = "bluefors"
+name = "Bluefors"
+category = "control"
+site = "https://bluefors.com/"
+
+[[source]]
+id = "maybell"
+name = "Maybell Quantum"
+category = "control"
+site = "https://www.maybellquantum.com/"
+enabled = false
+note = "Disabled before going public: homepage shows marketing pages, not news. Re-enable with a real news page."
+
+# =============================================================================
+# QUANTUM NETWORKING AND POST-QUANTUM CRYPTOGRAPHY
+# =============================================================================
+
+[[source]]
+id = "aliro"
+name = "Aliro Quantum"
+category = "networking"
+site = "https://www.aliroquantum.com/blog"
+
+[[source]]
+id = "qunnect"
+name = "Qunnect"
+category = "networking"
+site = "https://www.qunnect.com/news"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): Site resets connections from GitHub."
+
+[[source]]
+id = "pqshield"
+name = "PQShield"
+category = "networking"
+feed = "https://pqshield.com/feed/"
+site = "https://pqshield.com/blog/"
+
+[[source]]
+id = "cloudflare-post-quantum"
+name = "Cloudflare (post-quantum)"
+category = "networking"
+feed = "https://blog.cloudflare.com/tag/post-quantum/rss/"
+site = "https://blog.cloudflare.com/tag/post-quantum/"
+
+# =============================================================================
+# PROFESSIONAL BODIES AND PUBLICATIONS
+# =============================================================================
+
+[[source]]
+id = "ieee-spectrum-quantum"
+name = "IEEE Spectrum (quantum)"
+category = "publications"
+feed = [
+  "https://spectrum.ieee.org/feeds/topic/quantum-computing.rss",
+  "https://spectrum.ieee.org/feeds/topic/computing.rss",
+]
+site = "https://spectrum.ieee.org/topic/computing/"
+include_keywords = ["quantum", "qubit"]
+
+[[source]]
+id = "ieee-quantum"
+name = "IEEE Quantum"
+category = "publications"
+site = "https://quantum.ieee.org/"
+enabled = false
+note = "Dormant: no post since August 2025 (Check sources, Oct 2026). Re-enable if it revives."
+
+[[source]]
+id = "quanta-quantum"
+name = "Quanta Magazine (quantum)"
+category = "publications"
+feed = "https://www.quantamagazine.org/feed/"
+site = "https://www.quantamagazine.org/"
+include_keywords = ["quantum", "qubit", "entangle"]
+
+[[source]]
+id = "physics-world-quantum"
+name = "Physics World (quantum)"
+category = "publications"
+feed = ["https://physicsworld.com/c/quantum/feed/", "https://physicsworld.com/feed/"]
+site = "https://physicsworld.com/"
+include_keywords = ["quantum", "qubit", "entangle"]
+
+[[source]]
+id = "aps-physics-magazine"
+name = "APS Physics Magazine"
+category = "publications"
+feed = "https://feeds.aps.org/rss/recent/physics.xml"
+site = "https://physics.aps.org/"
+include_keywords = ["quantum", "qubit", "entangle"]
+note = "Viewpoints written by researchers. Feed verified Oct 2026."
+
+[[source]]
+id = "cacm-quantum"
+name = "Communications of the ACM (quantum)"
+category = "publications"
+feed = "https://cacm.acm.org/feed/"
+site = "https://cacm.acm.org/"
+include_keywords = ["quantum", "qubit"]
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): Site blocks GitHub runners (HTTP 403)."
+
+# =============================================================================
+# NATIONAL LABS AND GOVERNMENT PROGRAMS
+# =============================================================================
+
+[[source]]
+id = "quantum-gov"
+name = "National Quantum Initiative (quantum.gov)"
+category = "government"
+feed = "https://www.quantum.gov/feed/"
+site = "https://www.quantum.gov/news/"
+
+[[source]]
+id = "nist-quantum"
+name = "NIST Quantum Information Science"
+category = "government"
+site = "https://www.nist.gov/"
+include_keywords = ["quantum", "qubit", "entangle"]
+note = "Topic page moved; keyword filter keeps homepage fallback on-topic."
+
+[[source]]
+id = "sqms-fermilab"
+name = "SQMS Center (Fermilab)"
+category = "government"
+feed = "https://sqms.fnal.gov/feed/"
+site = "https://sqms.fnal.gov/news/"
+enabled = false
+note = "Site blocks or cannot be read from GitHub. Replaced by fermilab-news."
+
+[[source]]
+id = "quantum-systems-accelerator"
+name = "Quantum Systems Accelerator (Berkeley Lab)"
+category = "government"
+feed = "https://quantumsystemsaccelerator.org/feed/"
+site = "https://quantumsystemsaccelerator.org/news/"
+
+[[source]]
+id = "q-next"
+name = "Q-NEXT (Argonne)"
+category = "government"
+site = "https://www.q-next.org/"
+enabled = false
+note = "Disabled before going public: homepage shows marketing pages, not news. Re-enable with a real news page."
+
+[[source]]
+id = "quantum-science-center"
+name = "Quantum Science Center (Oak Ridge)"
+category = "government"
+site = "https://qscience.org/news/"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): Page is rendered by JavaScript; nothing to read."
+
+[[source]]
+id = "c2qa"
+name = "C2QA (Brookhaven)"
+category = "government"
+site = "https://www.bnl.gov/"
+include_keywords = ["quantum", "qubit", "c2qa"]
+note = "Keyword filter keeps a bnl.gov homepage fallback on-topic."
+
+[[source]]
+id = "nqcc"
+name = "UK National Quantum Computing Centre"
+category = "government"
+feed = "https://www.nqcc.ac.uk/feed/"
+site = "https://www.nqcc.ac.uk/news/"
+
+[[source]]
+id = "eu-quantum-flagship"
+name = "EU Quantum Flagship"
+category = "government"
+site = "https://qt.eu/news"
+
+[[source]]
+id = "darpa-quantum"
+name = "DARPA (quantum news)"
+category = "government"
+site = "https://www.darpa.mil/news"
+include_keywords = ["quantum", "qubit", "qbi"]
+
+# =============================================================================
+# UNIVERSITY INSTITUTES
+# =============================================================================
+
+[[source]]
+id = "jqi"
+name = "Joint Quantum Institute (Maryland)"
+category = "institutes"
+site = "https://jqi.umd.edu/"
+
+[[source]]
+id = "mit-news-quantum"
+name = "MIT News (quantum computing)"
+category = "institutes"
+feed = "https://news.mit.edu/rss/topic/quantum-computing"
+site = "https://news.mit.edu/topic/quantum-computing"
+
+[[source]]
+id = "qutech"
+name = "QuTech (Delft)"
+category = "institutes"
+feed = "https://qutech.nl/feed/"
+site = "https://qutech.nl/news/"
+
+[[source]]
+id = "iqc-waterloo"
+name = "Institute for Quantum Computing (Waterloo)"
+category = "institutes"
+site = "https://uwaterloo.ca/institute-for-quantum-computing/news"
+
+[[source]]
+id = "perimeter"
+name = "Perimeter Institute"
+category = "institutes"
+site = "https://perimeterinstitute.ca/news"
+include_keywords = ["quantum comput", "qubit", "quantum information", "quantum error", "error correction", "quantum advantage", "quantum algorithm", "entangle"]
+note = "Filtered to quantum computing; Perimeter covers all of theoretical physics."
+
+[[source]]
+id = "cqt-singapore"
+name = "Centre for Quantum Technologies (Singapore)"
+category = "institutes"
+site = "https://www.cqt.sg/"
+link_pattern = "cqt\\.sg/highlight/[^/]+/?$"
+note = "News posts live at /highlight/<slug>/."
+
+[[source]]
+id = "chicago-quantum-exchange"
+name = "Chicago Quantum Exchange"
+category = "institutes"
+site = "https://chicagoquantum.org/"
+
+[[source]]
+id = "harvard-quantum"
+name = "Harvard Quantum Initiative"
+category = "institutes"
+site = "https://quantum.harvard.edu/news"
+enabled = false
+note = "Site blocks or cannot be read from GitHub. Replaced by harvard-gazette-science."
+
+# =============================================================================
+# INDEPENDENT ANALYSTS AND INDUSTRY NEWS
+# =============================================================================
+
+[[source]]
+id = "olivier-ezratty"
+name = "Opinions Libres"
+username = "Olivier Ezratty"
+author = "Olivier Ezratty"
+category = "analysts"
+feed = "https://www.oezratty.net/wordpress/feed/"
+site = "https://www.oezratty.net/wordpress/"
+note = "Long, deeply researched industry analyses."
+
+[[source]]
+id = "daily-quantum-update"
+name = "Daily Quantum Update"
+username = "Bob Sutor"
+author = "Dr. Bob Sutor"
+category = "analysts"
+feed = "https://drbobsutor.substack.com/feed"
+site = "https://drbobsutor.substack.com/"
+high_volume = true
+note = "Disabled after Check sources (Oct 8, 2026): Substack blocks GitHub runners (HTTP 403)."
+enabled = false
+
+[[source]]
+id = "quantum-computing-report"
+name = "Quantum Computing Report"
+category = "analysts"
+feed = "https://quantumcomputingreport.com/feed/"
+site = "https://quantumcomputingreport.com/"
+high_volume = true
+mode = "digest"
+max_per_run = 10
+
+[[source]]
+id = "quantum-insider"
+name = "The Quantum Insider"
+category = "analysts"
+feed = "https://thequantuminsider.com/feed/"
+site = "https://thequantuminsider.com/"
+high_volume = true
+mode = "digest"
+max_per_run = 10
+note = "Very high volume; posted as digests."
+
+# =============================================================================
+# QUANTUM RESEARCHERS (additions, Oct 2026)
+# =============================================================================
+
+[[source]]
+id = "backreaction"
+name = "Backreaction"
+author = "Sabine Hossenfelder"
+category = "quantum-researchers"
+feed = "https://backreaction.blogspot.com/feeds/posts/default"
+site = "https://backreaction.blogspot.com/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "chris-ferrie"
+name = "Chris Ferrie"
+author = "Chris Ferrie (UTS Sydney)"
+category = "quantum-researchers"
+feed = "https://csferrie.medium.com/feed"
+site = "https://csferrie.medium.com/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "michael-nielsen"
+name = "Michael Nielsen's notebook"
+author = "Michael Nielsen (co-author of Nielsen & Chuang)"
+category = "quantum-researchers"
+site = "https://michaelnotebook.com/"
+kind = "html"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+link_pattern = "michaelnotebook\\.com/(?!ongoing|projects)[a-z0-9_-]+/(index\\.html)?$"
+enabled = false
+
+[[source]]
+id = "matt-strassler"
+name = "Of Particular Significance"
+author = "Matt Strassler"
+category = "quantum-researchers"
+feed = "https://profmattstrassler.com/feed/"
+site = "https://profmattstrassler.com/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "condensed-concepts"
+name = "Condensed Concepts"
+author = "Ross McKenzie (University of Queensland)"
+category = "quantum-researchers"
+feed = "https://condensedconcepts.blogspot.com/feeds/posts/default"
+site = "https://condensedconcepts.blogspot.com/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+# =============================================================================
+# PUBLICATIONS AND SCIENCE JOURNALISM (additions)
+# =============================================================================
+
+[[source]]
+id = "physorg-quantum"
+name = "Phys.org (quantum physics)"
+category = "publications"
+feed = "https://phys.org/rss-feed/physics-news/quantum-physics/"
+site = "https://phys.org/physics-news/quantum-physics/"
+include_keywords = ["quantum comput", "qubit", "error correction", "quantum network", "entangle", "quantum sens"]
+mode = "digest"
+max_per_run = 10
+high_volume = true
+note = "Many items a day, largely university press releases."
+
+[[source]]
+id = "ars-technica-science"
+name = "Ars Technica (science, quantum)"
+category = "publications"
+feed = "https://feeds.arstechnica.com/arstechnica/science"
+site = "https://arstechnica.com/science/"
+include_keywords = ["quantum", "qubit"]
+
+[[source]]
+id = "new-scientist-physics"
+name = "New Scientist (physics, quantum)"
+category = "publications"
+feed = "https://www.newscientist.com/subject/physics/feed/"
+site = "https://www.newscientist.com/subject/physics/"
+include_keywords = ["quantum", "qubit"]
+
+[[source]]
+id = "science-news-quantum"
+name = "Science (AAAS) news, quantum"
+category = "publications"
+feed = "https://www.science.org/rss/news_current.xml"
+site = "https://www.science.org/news"
+include_keywords = ["quantum", "qubit"]
+note = "science.org uses bot protection; may be blocked."
+
+[[source]]
+id = "mit-tech-review-quantum"
+name = "MIT Technology Review (quantum)"
+category = "publications"
+feed = "https://www.technologyreview.com/feed/"
+site = "https://www.technologyreview.com/"
+include_keywords = ["quantum", "qubit"]
+
+[[source]]
+id = "hpcwire-quantum"
+name = "HPCwire (quantum)"
+category = "publications"
+feed = "https://www.hpcwire.com/feed/"
+site = "https://www.hpcwire.com/"
+mode = "digest"
+max_per_run = 10
+high_volume = true
+note = "Switched off in the October 2026 review: not focused enough for the server."
+include_keywords = ["quantum", "qubit"]
+enabled = false
+
+[[source]]
+id = "the-next-platform"
+name = "The Next Platform (quantum)"
+category = "publications"
+feed = "https://www.nextplatform.com/feed/"
+site = "https://www.nextplatform.com/"
+include_keywords = ["quantum", "qubit"]
+
+[[source]]
+id = "ee-times-quantum"
+name = "EE Times (quantum)"
+category = "publications"
+feed = "https://www.eetimes.com/feed/"
+site = "https://www.eetimes.com/"
+include_keywords = ["quantum", "qubit", "cryo"]
+
+[[source]]
+id = "quanta-computer-science"
+name = "Quanta Magazine (computer science)"
+category = "publications"
+feed = "https://www.quantamagazine.org/computer-science/feed/"
+site = "https://www.quantamagazine.org/computer-science/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "quanta-mathematics"
+name = "Quanta Magazine (mathematics)"
+category = "publications"
+feed = "https://www.quantamagazine.org/mathematics/feed/"
+site = "https://www.quantamagazine.org/mathematics/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "inside-quantum-technology"
+name = "Inside Quantum Technology"
+category = "publications"
+feed = "https://www.insidequantumtechnology.com/feed/"
+site = "https://www.insidequantumtechnology.com/news/"
+mode = "digest"
+max_per_run = 10
+high_volume = true
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "ars-technica-ai"
+name = "Ars Technica (AI)"
+category = "publications"
+feed = "https://arstechnica.com/ai/feed/"
+site = "https://arstechnica.com/ai/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "mit-tech-review-ai"
+name = "MIT Technology Review (AI)"
+category = "publications"
+feed = "https://www.technologyreview.com/topic/artificial-intelligence/feed"
+site = "https://www.technologyreview.com/topic/artificial-intelligence/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+# =============================================================================
+# AI COMPANIES AND LABS (filed under AI researchers)
+# =============================================================================
+
+[[source]]
+id = "openai"
+name = "OpenAI News"
+category = "ai"
+feed = "https://openai.com/news/rss.xml"
+site = "https://openai.com/news/"
+note = "Feed confirmed working Oct 2026 (Feeder). openai.com uses Cloudflare; may be blocked from GitHub."
+max_per_run = 2
+
+[[source]]
+id = "google-deepmind"
+name = "Google DeepMind"
+category = "ai"
+feed = "https://deepmind.google/blog/rss.xml"
+site = "https://deepmind.google/blog/"
+note = "Feed confirmed working Oct 2026 (Feeder)."
+
+[[source]]
+id = "google-ai"
+name = "Google AI (The Keyword)"
+category = "ai"
+feed = "https://blog.google/innovation-and-ai/technology/ai/rss/"
+site = "https://blog.google/technology/ai/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "google-research"
+name = "Google Research Blog"
+category = "ai"
+feed = "https://research.google/blog/rss/"
+site = "https://research.google/blog/"
+note = "Full blog; google-research-quantum keeps a quantum-only copy."
+
+[[source]]
+id = "anthropic"
+name = "Anthropic News"
+category = "ai"
+site = "https://www.anthropic.com/news"
+kind = "html"
+link_pattern = "anthropic\\.com/news/[a-z0-9-]+/?$"
+note = "No RSS exists; the news page is read directly."
+max_per_run = 2
+
+[[source]]
+id = "anthropic-research"
+name = "Anthropic Research"
+category = "ai"
+site = "https://www.anthropic.com/research"
+kind = "html"
+link_pattern = "anthropic\\.com/research/[a-z0-9-]+/?$"
+note = "No RSS exists; the research page is read directly."
+
+[[source]]
+id = "meta-ai"
+name = "Meta AI Blog"
+category = "ai"
+site = "https://ai.meta.com/blog/"
+kind = "html"
+link_pattern = "ai\\.meta\\.com/blog/[a-z0-9-]+/?$"
+note = "Disabled after Check sources (Oct 8, 2026): Page rejects automated requests (HTTP 400) and has no feed."
+enabled = false
+
+[[source]]
+id = "microsoft-research"
+name = "Microsoft Research Blog"
+category = "ai"
+feed = "https://www.microsoft.com/en-us/research/feed/"
+site = "https://www.microsoft.com/en-us/research/blog/"
+
+[[source]]
+id = "apple-ml-research"
+name = "Apple Machine Learning Research"
+category = "ai"
+feed = "https://machinelearning.apple.com/rss.xml"
+site = "https://machinelearning.apple.com/research"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "amazon-science"
+name = "Amazon Science"
+category = "ai"
+feed = "https://www.amazon.science/index.rss"
+site = "https://www.amazon.science/blog"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "nvidia-blog"
+name = "NVIDIA Blog"
+category = "ai"
+feed = "https://blogs.nvidia.com/feed/"
+site = "https://blogs.nvidia.com/"
+max_per_run = 5
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "mistral"
+name = "Mistral AI News"
+category = "ai"
+feed = "https://mistral.ai/news/rss"
+site = "https://mistral.ai/news"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "hugging-face"
+name = "Hugging Face Blog"
+category = "ai"
+feed = "https://huggingface.co/blog/feed.xml"
+site = "https://huggingface.co/blog"
+mode = "digest"
+high_volume = true
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "aws-machine-learning"
+name = "AWS Machine Learning Blog"
+category = "ai"
+feed = "https://aws.amazon.com/blogs/machine-learning/feed/"
+site = "https://aws.amazon.com/blogs/machine-learning/"
+mode = "digest"
+high_volume = true
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "ibm-research"
+name = "IBM Research Blog"
+category = "ai"
+site = "https://research.ibm.com/blog"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "meta-engineering"
+name = "Engineering at Meta (AI)"
+category = "ai"
+feed = "https://engineering.fb.com/feed/"
+site = "https://engineering.fb.com/"
+include_keywords = ["AI", "artificial intelligence", "machine learning", "model", "LLM", "neural"]
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "ai2"
+name = "Ai2 (Allen Institute for AI)"
+category = "ai"
+site = "https://allenai.org/blog"
+
+[[source]]
+id = "transformer-circuits"
+name = "Transformer Circuits Thread"
+author = "Anthropic interpretability team"
+category = "ai"
+site = "https://transformer-circuits.pub/"
+kind = "html"
+note = "Static index of interpretability write-ups."
+link_pattern = "transformer-circuits\\.pub/20[0-9]{2}/[^/]+/index\\.html$"
+
+# =============================================================================
+# AI RESEARCHERS (additions)
+# =============================================================================
+
+[[source]]
+id = "import-ai"
+name = "Import AI"
+author = "Jack Clark (Anthropic co-founder)"
+category = "ai"
+feed = "https://jack-clark.net/feed/"
+site = "https://jack-clark.net/"
+note = "WordPress mirror; the substack.com address is blocked from GitHub."
+
+[[source]]
+id = "one-useful-thing"
+name = "One Useful Thing"
+author = "Ethan Mollick (Wharton)"
+category = "ai"
+feed = "https://www.oneusefulthing.org/feed"
+site = "https://www.oneusefulthing.org/"
+
+[[source]]
+id = "epoch-ai"
+name = "Epoch AI: Gradient Updates"
+category = "ai"
+site = "https://epoch.ai/gradient-updates"
+note = "The epochai.substack.com address is blocked from GitHub."
+link_pattern = "epoch\\.ai/gradient-updates/[a-z0-9-]+/?$"
+
+[[source]]
+id = "ai-as-normal-technology"
+name = "AI as Normal Technology"
+author = "Arvind Narayanan and Sayash Kapoor (Princeton)"
+category = "ai"
+feed = "https://www.normaltech.ai/feed"
+site = "https://www.normaltech.ai/"
+
+[[source]]
+id = "understanding-ai"
+name = "Understanding AI"
+author = "Timothy B. Lee"
+category = "ai"
+feed = "https://www.understandingai.org/feed"
+site = "https://www.understandingai.org/"
+
+[[source]]
+id = "zvi"
+name = "Don't Worry About the Vase"
+author = "Zvi Mowshowitz"
+category = "ai"
+feed = "https://thezvi.wordpress.com/feed/"
+site = "https://thezvi.wordpress.com/"
+mode = "digest"
+high_volume = true
+
+[[source]]
+id = "eugene-yan"
+name = "Eugene Yan"
+category = "ai"
+feed = "https://eugeneyan.com/rss/"
+site = "https://eugeneyan.com/writing/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "yoshua-bengio"
+name = "Yoshua Bengio"
+category = "ai"
+feed = "https://yoshuabengio.org/feed/"
+site = "https://yoshuabengio.org/"
+note = "A few posts a year."
+
+# =============================================================================
+# UNIVERSITY AI LABS (filed under University institutes)
+# =============================================================================
+
+[[source]]
+id = "cmu-ml-blog"
+name = "ML@CMU Blog"
+category = "institutes"
+feed = "https://blog.ml.cmu.edu/feed/"
+site = "https://blog.ml.cmu.edu/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "mit-news-ai"
+name = "MIT News (artificial intelligence)"
+category = "institutes"
+feed = "https://news.mit.edu/rss/topic/artificial-intelligence2"
+site = "https://news.mit.edu/topic/artificial-intelligence2"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "bair"
+name = "Berkeley AI Research (BAIR) Blog"
+category = "institutes"
+feed = "https://bair.berkeley.edu/blog/feed.xml"
+site = "https://bair.berkeley.edu/blog/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "stanford-hai"
+name = "Stanford HAI News"
+category = "institutes"
+site = "https://hai.stanford.edu/news"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "stanford-ai-lab"
+name = "Stanford AI Lab Blog"
+category = "institutes"
+feed = "https://ai.stanford.edu/blog/feed.xml"
+site = "https://ai.stanford.edu/blog/"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): Dormant: no post since May 2022."
+
+[[source]]
+id = "freedom-to-tinker"
+name = "Freedom to Tinker"
+author = "Princeton CITP"
+category = "institutes"
+feed = "https://freedom-to-tinker.com/feed/"
+site = "https://freedom-to-tinker.com/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+# =============================================================================
+# THEORETICAL COMPUTER SCIENCE (additions)
+# =============================================================================
+
+[[source]]
+id = "process-algebra-diary"
+name = "Process Algebra Diary"
+author = "Luca Aceto (Reykjavik University, GSSI)"
+category = "tcs"
+feed = "https://processalgebra.blogspot.com/feeds/posts/default"
+site = "https://processalgebra.blogspot.com/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "property-testing-review"
+name = "Property Testing Review"
+category = "tcs"
+feed = "https://ptreview.sublinear.info/feed/"
+site = "https://ptreview.sublinear.info/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "jeremy-kun"
+name = "Math ∩ Programming"
+author = "Jeremy Kun"
+category = "tcs"
+feed = "https://www.jeremykun.com/index.xml"
+site = "https://www.jeremykun.com/"
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "daniel-lemire"
+name = "Daniel Lemire's blog"
+category = "tcs"
+feed = "https://lemire.me/blog/feed/"
+site = "https://lemire.me/blog/"
+mode = "digest"
+high_volume = true
+enabled = false
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+
+[[source]]
+id = "andrej-bauer"
+name = "Mathematics and Computation"
+author = "Andrej Bauer (Ljubljana)"
+category = "tcs"
+feed = "https://math.andrej.com/feed.xml"
+site = "https://math.andrej.com/"
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+enabled = false
+
+[[source]]
+id = "goldreich-choices"
+name = "Oded Goldreich's choices"
+category = "tcs"
+site = "https://www.wisdom.weizmann.ac.il/~oded/my-choice.html"
+kind = "html"
+link_pattern = "~oded/MC/[0-9]+"
+note = "Switched off in the October 2026 review: theoretical CS channel removed."
+enabled = false
+
+# =============================================================================
+# MATHEMATICS (additions)
+# =============================================================================
+
+[[source]]
+id = "daniel-litt"
+name = "Daniel Litt"
+author = "Daniel Litt (University of Toronto)"
+category = "math"
+site = "https://www.daniellitt.com/blog"
+note = "Leading voice on AI and mathematics."
+
+[[source]]
+id = "john-d-cook"
+name = "The Endeavour"
+author = "John D. Cook"
+category = "math"
+feed = "https://www.johndcook.com/blog/feed/"
+site = "https://www.johndcook.com/blog/"
+mode = "digest"
+high_volume = true
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "matt-baker"
+name = "Matt Baker's Math Blog"
+author = "Matt Baker (Georgia Tech)"
+category = "math"
+feed = "https://mattbaker.blog/feed/"
+site = "https://mattbaker.blog/"
+
+[[source]]
+id = "aperiodical"
+name = "The Aperiodical"
+category = "math"
+feed = "https://aperiodical.com/feed/"
+site = "https://aperiodical.com/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "lean-community"
+name = "Lean Community Blog"
+category = "math"
+site = "https://leanprover-community.github.io/blog/"
+
+# =============================================================================
+# NATIONAL LABS AND UNIVERSITY QUANTUM CENTERS (additions)
+# =============================================================================
+
+[[source]]
+id = "fermilab-news"
+name = "Fermilab News (quantum)"
+category = "government"
+feed = "https://news.fnal.gov/feed/"
+site = "https://news.fnal.gov/"
+include_keywords = ["quantum", "qubit", "SQMS"]
+note = "Replaces sqms-fermilab."
+
+[[source]]
+id = "berkeley-lab-news"
+name = "Berkeley Lab News (quantum)"
+category = "government"
+feed = "https://newscenter.lbl.gov/feed/"
+site = "https://newscenter.lbl.gov/"
+include_keywords = ["quantum", "qubit", "entangle", "error correction"]
+
+[[source]]
+id = "sandia-news"
+name = "Sandia News (quantum)"
+category = "government"
+feed = "https://newsreleases.sandia.gov/feed/"
+site = "https://newsreleases.sandia.gov/"
+include_keywords = ["quantum", "qubit", "entangle", "error correction"]
+
+[[source]]
+id = "dlr-qci"
+name = "DLR Quantum Computing Initiative"
+category = "government"
+site = "https://qci.dlr.de/en/news/"
+
+[[source]]
+id = "harvard-gazette-science"
+name = "Harvard Gazette (science, quantum)"
+category = "institutes"
+feed = "https://news.harvard.edu/gazette/section/science-technology/feed/"
+site = "https://news.harvard.edu/gazette/section/science-technology/"
+include_keywords = ["quantum", "qubit"]
+note = "Replaces harvard-quantum."
+
+[[source]]
+id = "quics"
+name = "QuICS (Maryland)"
+category = "institutes"
+site = "https://quics.umd.edu/"
+link_pattern = "quics\\.umd\\.edu/news/[^/]+/?$"
+
+[[source]]
+id = "jila"
+name = "JILA (Colorado)"
+category = "institutes"
+site = "https://jila.colorado.edu/news"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): News page returns an API error instead of articles."
+
+[[source]]
+id = "yale-quantum"
+name = "Yale Quantum Institute"
+category = "institutes"
+site = "https://quantuminstitute.yale.edu/"
+link_pattern = "quantuminstitute\\.yale\\.edu/news/[^/]+/?$"
+
+[[source]]
+id = "princeton-quantum"
+name = "Princeton Quantum Initiative"
+category = "institutes"
+site = "https://quantum.princeton.edu/news"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): Site blocks GitHub runners (HTTP 403)."
+
+[[source]]
+id = "uchicago-pme"
+name = "UChicago Pritzker School of Molecular Engineering"
+category = "institutes"
+site = "https://pme.uchicago.edu/news"
+include_keywords = ["quantum", "qubit", "entangle", "error correction"]
+
+[[source]]
+id = "illinois-iquist"
+name = "Illinois IQUIST"
+category = "institutes"
+site = "https://iquist.illinois.edu/"
+
+[[source]]
+id = "duke-quantum"
+name = "Duke Quantum Center"
+category = "institutes"
+site = "https://quantum.duke.edu/news"
+
+[[source]]
+id = "mpq"
+name = "Max Planck Institute of Quantum Optics"
+category = "institutes"
+site = "https://www.mpq.mpg.de/"
+enabled = false
+note = "Switched off in the October 2026 review: reads the homepage and titles are often in German."
+
+# =============================================================================
+# QUANTUM COMPANIES (additions)
+# =============================================================================
+
+[[source]]
+id = "quantware"
+name = "QuantWare"
+category = "hardware"
+site = "https://quantware.com/news"
+
+[[source]]
+id = "seeqc"
+name = "SEEQC"
+category = "control"
+site = "https://seeqc.com/"
+enabled = false
+note = "Disabled before going public: homepage shows marketing pages, not news. Re-enable with a real news page."
+
+[[source]]
+id = "quantum-brilliance"
+name = "Quantum Brilliance"
+category = "hardware"
+site = "https://quantumbrilliance.com/news"
+
+[[source]]
+id = "c12"
+name = "C12 Quantum Electronics"
+category = "hardware"
+site = "https://www.c12qe.com/news"
+
+[[source]]
+id = "universal-quantum"
+name = "Universal Quantum"
+category = "hardware"
+site = "https://universalquantum.com/"
+enabled = false
+note = "Disabled before going public: homepage shows marketing pages, not news. Re-enable with a real news page."
+
+[[source]]
+id = "eeroq"
+name = "EeroQ"
+category = "hardware"
+site = "https://eeroq.com/"
+enabled = false
+note = "Disabled before going public: homepage shows marketing pages, not news. Re-enable with a real news page."
+
+[[source]]
+id = "quantum-source"
+name = "Quantum Source"
+category = "hardware"
+site = "https://qs.co/news"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): Site blocks GitHub runners (HTTP 403)."
+
+[[source]]
+id = "qedma"
+name = "Qedma"
+category = "qec"
+site = "https://www.qedma.com/blog"
+
+[[source]]
+id = "strangeworks"
+name = "Strangeworks"
+category = "software"
+site = "https://strangeworks.com/"
+enabled = false
+note = "Disabled before going public: homepage shows marketing pages, not news. Re-enable with a real news page."
+
+[[source]]
+id = "qunasys"
+name = "QunaSys"
+category = "software"
+site = "https://qunasys.com/en/news"
+
+[[source]]
+id = "terra-quantum"
+name = "Terra Quantum"
+category = "software"
+site = "https://terraquantum.swiss/news"
+
+[[source]]
+id = "qruise"
+name = "Qruise"
+category = "control"
+site = "https://qruise.com/"
+
+[[source]]
+id = "delft-circuits"
+name = "Delft Circuits"
+category = "control"
+site = "https://delft-circuits.com/news"
+
+[[source]]
+id = "qphox"
+name = "QphoX"
+category = "networking"
+site = "https://qphox.eu/news"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): Site blocks GitHub runners (HTTP 403)."
+
+[[source]]
+id = "nu-quantum"
+name = "Nu Quantum"
+category = "networking"
+site = "https://www.nu-quantum.com/news"
+
+[[source]]
+id = "welinq"
+name = "Welinq"
+category = "networking"
+site = "https://welinq.fr/news"
+
+[[source]]
+id = "memq"
+name = "memQ"
+category = "networking"
+site = "https://www.memq.tech/news"
+
+[[source]]
+id = "qusecure"
+name = "QuSecure"
+category = "networking"
+site = "https://www.qusecure.com/blog"
+
+# =============================================================================
+# ANALYSTS (additions)
+# =============================================================================
+
+[[source]]
+id = "postquantum"
+name = "PostQuantum.com"
+author = "Marin Ivezic"
+category = "analysts"
+feed = "https://postquantum.com/feed/"
+site = "https://postquantum.com/"
+note = "Practitioner commentary on Q-Day and post-quantum migration."
+
+[[source]]
+id = "semianalysis"
+name = "SemiAnalysis"
+author = "Dylan Patel"
+category = "analysts"
+feed = "https://semianalysis.com/feed/"
+site = "https://semianalysis.com/"
+note = "Disabled after Check sources (Oct 8, 2026): Feed stale: no post since Sep 2025."
+enabled = false
+
+[[source]]
+id = "benedict-evans"
+name = "Benedict Evans"
+category = "analysts"
+feed = "https://www.ben-evans.com/benedictevans?format=rss"
+site = "https://www.ben-evans.com/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
+
+[[source]]
+id = "stratechery"
+name = "Stratechery"
+author = "Ben Thompson"
+category = "analysts"
+feed = "https://stratechery.com/feed/"
+site = "https://stratechery.com/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "fact-based-insight"
+name = "Fact Based Insight"
+author = "David Shaw"
+category = "analysts"
+site = "https://www.factbasedinsight.com/"
+enabled = false
+note = "Disabled after Check sources (Oct 8, 2026): Domain now serves unrelated gambling content."
+
+[[source]]
+id = "qed-c"
+name = "QED-C (Quantum Economic Development Consortium)"
+category = "analysts"
+site = "https://quantumconsortium.org/"
+enabled = false
+note = "Disabled before going public: homepage shows marketing pages, not news. Re-enable with a real news page."
+
+[[source]]
+id = "gqi"
+name = "Global Quantum Intelligence (GQI)"
+category = "analysts"
+site = "https://www.global-qi.com/"
+enabled = false
+note = "Disabled before going public: homepage shows marketing pages, not news. Re-enable with a real news page."
+
+# =============================================================================
+# PODCASTS (filed under their subject categories)
+# =============================================================================
+
+[[source]]
+id = "mindscape"
+name = "Mindscape"
+author = "Sean Carroll"
+category = "quantum-researchers"
+feed = "https://www.preposterousuniverse.com/podcast/feed/"
+site = "https://www.preposterousuniverse.com/podcast/"
+note = "Switched off in the October 2026 review: not focused enough for the server."
+enabled = false
+
+[[source]]
+id = "new-quantum-era"
+name = "The New Quantum Era"
+author = "Sebastian Hassinger"
+category = "publications"
+site = "https://newquantumera.transistor.fm/"
+
+[[source]]
+id = "dwarkesh"
+name = "Dwarkesh Podcast"
+author = "Dwarkesh Patel"
+category = "ai"
+feed = "https://www.dwarkesh.com/feed"
+site = "https://www.dwarkesh.com/"
+enabled = false
+note = "Switched off in the October 2026 review: not focused enough for the server."
